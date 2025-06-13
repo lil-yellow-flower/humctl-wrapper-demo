@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/mathi-ma51zaw/humctl-wrapper-demo/internal/humanitec"
+	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/humanitec"
 	"gopkg.in/yaml.v3"
 )
 

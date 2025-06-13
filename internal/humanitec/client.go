@@ -4,10 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
-
-	"github.com/joho/godotenv"
 )
 
 // App represents a Humanitec application
@@ -16,27 +13,25 @@ type App struct {
 	Name string `json:"name"`
 }
 
-// Client represents a Humanitec API client
-type Client struct {
+// Client interface defines the methods that a Humanitec client must implement
+type Client interface {
+	ListApps() ([]App, error)
+}
+
+// humanitecClient represents a Humanitec API client
+type humanitecClient struct {
 	apiToken string
 	baseURL  string
 	org      string
-	env      string
 	client   *http.Client
 }
 
 // NewClient creates a new Humanitec API client
-func NewClient() *Client {
-	// Load .env file
-	if err := godotenv.Load(); err != nil {
-		fmt.Println("Warning: .env file not found")
-	}
-
-	return &Client{
-		apiToken: os.Getenv("HUMANITEC_TOKEN"),
+func NewClient(apiToken, org string) Client {
+	return &humanitecClient{
+		apiToken: apiToken,
 		baseURL:  "https://api.humanitec.io",
-		org:      os.Getenv("HUMANITEC_ORG"),
-		env:      os.Getenv("HUMANITEC_ENV"),
+		org:      org,
 		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
@@ -44,18 +39,18 @@ func NewClient() *Client {
 }
 
 // Validate checks if the client is properly configured
-func (c *Client) Validate() error {
+func (c *humanitecClient) Validate() error {
 	if c.apiToken == "" {
 		return ErrMissingAPIToken
 	}
 	if c.org == "" {
-		return fmt.Errorf("HUMANITEC_ORG environment variable is not set")
+		return fmt.Errorf("organization ID is required")
 	}
 	return nil
 }
 
 // ListApps returns a list of applications
-func (c *Client) ListApps() ([]App, error) {
+func (c *humanitecClient) ListApps() ([]App, error) {
 	if err := c.Validate(); err != nil {
 		return nil, err
 	}
@@ -84,4 +79,4 @@ func (c *Client) ListApps() ([]App, error) {
 	}
 
 	return apps, nil
-} 
+}

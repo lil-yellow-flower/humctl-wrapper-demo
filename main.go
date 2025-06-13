@@ -2,12 +2,14 @@ package main
 
 import (
 	"log"
+	"os"
 
-	"github.com/mathi-ma51zaw/humctl-wrapper-demo/internal/commands"
+	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/commands"
 )
 
 func main() {
 	if err := commands.Execute(); err != nil {
-		log.Fatal(err)
+		log.Printf("Error: %v\n", err)
+		os.Exit(1)
 	}
 } 

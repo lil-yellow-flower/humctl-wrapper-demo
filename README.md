@@ -1,50 +1,59 @@
 # Humctl Wrapper Demo
 
-A CLI wrapper for Humanitec platform that provides basic CRUD operations for managing resources.
+A command line interface wrapper for Humanitec platform that provides basic operations for managing resources.
 
 ## Prerequisites
 
-- Go 1.21+
-- Humanitec account and API token
+- Go 1.21 or later
+- A Humanitec account and API token
 
-## Setup
+## Quick Start
 
-1. Clone and build:
 ```bash
-git clone https://github.com/mathi-ma51zaw/humctl-wrapper-demo.git
+# Clone the repository
+git clone https://github.com/lil-yellow-flower/humctl-wrapper-demo.git
 cd humctl-wrapper-demo
-go build -o humctl-wrapper.exe
+
+# Build the application
+go build -o humctl-wrapper
 ```
 
-2. Create `.env`:
+## Create a .env file in root directory with your Humanitec credentials
+
 ```env
-HUMANITEC_TOKEN=your_token_here
-HUMANITEC_ORG=your_org_here
-HUMANITEC_ENV=your_env_here
+HUMANITEC_TOKEN=your-token-here
+HUMANITEC_ORG=your-org-here
 ```
 
-## Usage
+## Available Commands
+
+### Get Applications
 
 ```bash
-# List applications
-./humctl-wrapper.exe get apps
+# List applications (uses HUMANITEC_ORG from .env)
+./humctl-wrapper get apps
+
+# List applications for a specific organization
+./humctl-wrapper get apps --org different-org
 
 # Output formats
-./humctl-wrapper.exe get apps -o json
-./humctl-wrapper.exe get apps -o yaml
+./humctl-wrapper get apps -o json
+./humctl-wrapper get apps -o yaml
 ```
 
-## Project Structure
+## Development
 
-```
-humctl-wrapper-demo/
-├── main.go            # Entry point
-├── internal/
-│   ├── commands/      # Command implementations
-│   ├── humanitec/     # Humanitec client
-│   └── output/        # Output formatting
-├── go.mod
-└── README.md
+### Running Tests
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with verbose output
+go test -v ./internal/commands
+
+# Run specific test
+go test -v ./internal/commands -run TestGetApps/table_format
 ```
 
 ## License
