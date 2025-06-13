@@ -17,7 +17,7 @@ type Config struct {
 }
 
 var (
-	version = "0.2.0"
+	version = "0.2.1"
 	commit  = "dev"
 	date    = "unknown"
 
@@ -42,10 +42,6 @@ var (
 			if config.HumanitecOrg == "" {
 				return fmt.Errorf(constants.ErrMissingOrg)
 			}
-
-			// Set environment variables for backward compatibility
-			os.Setenv(constants.HumanitecToken, config.HumanitecToken)
-			os.Setenv(constants.HumanitecOrg, config.HumanitecOrg)
 
 			return nil
 		},

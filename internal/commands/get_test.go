@@ -165,9 +165,6 @@ func TestGetApps(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Set config file path
-			os.Setenv("CONFIG_FILE", configFile)
-
 			// Create test command
 			cmd := setupTestCommand(t, mockClient)
 
