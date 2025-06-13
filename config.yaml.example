@@ -1,0 +1,6 @@
+# Humanitec API credentials
+humanitec_token: "your-api-token-here"
+humanitec_org: "your-org-id-here"
+
+# Default output format (table, json, yaml)
+default_output: "table" 

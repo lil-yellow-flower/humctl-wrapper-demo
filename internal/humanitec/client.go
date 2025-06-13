@@ -15,7 +15,7 @@ type App struct {
 
 // Client interface defines the methods that a Humanitec client must implement
 type Client interface {
-	ListApps() ([]App, error)
+	GetApps() ([]App, error)
 }
 
 // humanitecClient represents a Humanitec API client
@@ -49,8 +49,8 @@ func (c *humanitecClient) Validate() error {
 	return nil
 }
 
-// ListApps returns a list of applications
-func (c *humanitecClient) ListApps() ([]App, error) {
+// GetApps returns a list of applications
+func (c *humanitecClient) GetApps() ([]App, error) {
 	if err := c.Validate(); err != nil {
 		return nil, err
 	}

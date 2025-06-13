@@ -1,46 +1,36 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"text/tabwriter"
 
-	"github.com/joho/godotenv"
 	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/constants"
 	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/humanitec"
 	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/output"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 )
-
-var (
-	client humanitec.Client
-)
-
-// SetClient sets the Humanitec client
-func SetClient(c humanitec.Client) {
-	client = c
-}
 
 var getCmd = &cobra.Command{
 	Use:   constants.GetCmdUse,
 	Short: "Get resources from Humanitec platform",
-	Long:  `Get resources from Humanitec platform. For example: humctl-wrapper get apps`,
 }
 
 var getAppsCmd = &cobra.Command{
 	Use:   constants.GetAppsCmdUse,
 	Short: "Get applications from Humanitec platform",
-	Long:  `Get applications from Humanitec platform. For example: humctl-wrapper get apps`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Load .env file
-		if err := godotenv.Load(); err != nil {
-			// Don't return error if .env file doesn't exist
-			fmt.Println("Warning: .env file not found")
-		}
-
-		// Get format from flag
+		// Get format from flag or config
 		formatStr, err := cmd.Flags().GetString(constants.OutputFlagName)
 		if err != nil {
 			return fmt.Errorf(constants.ErrInvalidOutputFormat, err)
+		}
+
+		// If no format specified, use default from config
+		if formatStr == "" {
+			formatStr = GetConfig().DefaultOutput
 		}
 
 		// Validate format
@@ -49,31 +39,20 @@ var getAppsCmd = &cobra.Command{
 			return fmt.Errorf(constants.ErrInvalidOutputFormat, err)
 		}
 
-		// Get org from flag or environment
-		org, err := cmd.Flags().GetString(constants.OrgFlagName)
-		if err != nil {
-			return fmt.Errorf(constants.ErrInvalidOrgFlag, err)
-		}
-
-		// If org not provided, use environment variable
+		// Get organization ID from flag or config
+		org := cmd.Flag("org").Value.String()
 		if org == "" {
-			org = os.Getenv(constants.EnvHumanitecOrg)
-			if org == "" {
-				return fmt.Errorf(constants.ErrMissingOrg)
-			}
+			org = GetConfig().HumanitecOrg
 		}
 
-		// Get token from environment
-		token := os.Getenv(constants.EnvHumanitecToken)
-		if token == "" {
-			return fmt.Errorf(constants.ErrMissingToken)
-		}
+		// Get token from config
+		token := GetConfig().HumanitecToken
 
-		// Initialize client
-		c := humanitec.NewClient(token, org)
+		// Create Humanitec client
+		client := humanitec.NewClient(token, org)
 
 		// Get applications
-		apps, err := c.ListApps()
+		apps, err := client.GetApps()
 		if err != nil {
 			return fmt.Errorf(constants.ErrGetApps, err)
 		}
@@ -83,17 +62,48 @@ var getAppsCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf(constants.ErrFormatOutput, err)
 		}
-		fmt.Println(formatted)
+		fmt.Fprintln(cmd.OutOrStdout(), formatted)
 
 		return nil
 	},
 }
 
-func init() {
-	// Add get apps command to get command
-	getCmd.AddCommand(getAppsCmd)
+// printJSON prints the applications in JSON format
+func printJSON(apps []humanitec.App) error {
+	data, err := json.MarshalIndent(apps, "", "  ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(data))
+	return nil
+}
 
+// printYAML prints the applications in YAML format
+func printYAML(apps []humanitec.App) error {
+	data, err := yaml.Marshal(apps)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(data))
+	return nil
+}
+
+// printTable prints the applications in table format
+func printTable(apps []humanitec.App) error {
+	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+	fmt.Fprintln(w, "ID\tName")
+	for _, app := range apps {
+		fmt.Fprintf(w, "%s\t%s\n", app.ID, app.Name)
+	}
+	return w.Flush()
+}
+
+func init() {
 	// Add flags to get apps command
-	getAppsCmd.Flags().StringP(constants.OutputFlagName, constants.OutputFlagShort, constants.DefaultOutputFormat, "Output format (table|json|yaml)")
-	getAppsCmd.Flags().String(constants.OrgFlagName, "", fmt.Sprintf("Humanitec organization ID (defaults to %s environment variable)", constants.EnvHumanitecOrg))
-} 
+	getAppsCmd.Flags().StringP(constants.OutputFlagName, constants.OutputFlagShort, "", "Output format (table|json|yaml)")
+	getAppsCmd.Flags().StringP(constants.OrgFlagName, constants.OrgFlagShort, "", fmt.Sprintf("Humanitec organization ID (defaults to %s environment variable)", constants.HumanitecOrg))
+
+	// Add commands to hierarchy
+	getCmd.AddCommand(getAppsCmd)
+	rootCmd.AddCommand(getCmd)
+}

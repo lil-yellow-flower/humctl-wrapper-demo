@@ -1,22 +1,19 @@
 package constants
 
-// Environment variable names
+// Config field names
 const (
-	// Humanitec environment variables
-	EnvHumanitecToken = "HUMANITEC_TOKEN"
-	EnvHumanitecOrg   = "HUMANITEC_ORG"
-	EnvHumanitecEnv   = "HUMANITEC_ENV"
+	HumanitecToken = "humanitec_token"
+	HumanitecOrg   = "humanitec_org"
 )
 
 // Default values
 const (
 	DefaultOutputFormat = "table"
-	DefaultConfigFile   = "$HOME/.humctl-wrapper.yaml"
+	DefaultConfigFile   = "$HOME/config.yaml"
 )
 
-// Command names and paths
+// Command names
 const (
-	// Root command
 	RootCmdName = "humctl-wrapper-demo"
 	RootCmdUse  = "humctl-wrapper"
 
@@ -28,6 +25,12 @@ const (
 	GetAppsCmdUse = "apps"
 )
 
+// Command descriptions
+const (
+	GetCmdShort     = "Get resources from Humanitec platform"
+	GetAppsCmdShort = "Get applications from Humanitec platform"
+)
+
 // Flag names
 const (
 	// Global flags
@@ -37,9 +40,14 @@ const (
 	VersionFlagShort = "v"
 
 	// Get apps flags
-	OutputFlagName  = "output"
+	OutputFlagName = "output"
+	OrgFlagName    = "org"
+)
+
+// Flag shorthands
+const (
 	OutputFlagShort = "o"
-	OrgFlagName     = "org"
+	OrgFlagShort    = "g"
 )
 
 // Help text
@@ -55,8 +63,8 @@ const (
 
 // Error messages
 const (
-	ErrMissingToken        = "HUMANITEC_TOKEN environment variable is required"
-	ErrMissingOrg          = "HUMANITEC_ORG environment variable is required"
+	ErrMissingToken        = "Humanitec API token is required"
+	ErrMissingOrg          = "Humanitec organization ID is required"
 	ErrInvalidOutputFormat = "invalid output format: %v"
 	ErrInvalidOrgFlag      = "invalid organization flag: %v"
 	ErrGetApps            = "failed to get applications: %v"

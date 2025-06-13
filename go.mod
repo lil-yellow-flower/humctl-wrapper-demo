@@ -3,7 +3,6 @@ module github.com/lil-yellow-flower/humctl-wrapper-demo
 go 1.21
 
 require (
-	github.com/joho/godotenv v1.5.1
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	gopkg.in/yaml.v3 v3.0.1

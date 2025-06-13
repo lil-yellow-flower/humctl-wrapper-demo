@@ -1,61 +1,61 @@
 # Humctl Wrapper Demo
 
-A command line interface wrapper for Humanitec platform that provides basic operations for managing resources.
+A command line interface wrapper for the Humanitec platform, demonstrating best practices for Go CLI development.
 
 ## Prerequisites
 
 - Go 1.21 or later
-- A Humanitec account and API token
+- A Humanitec account with API access
+- Your Humanitec API token and organization ID
 
-## Quick Start
+## Installation
 
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/lil-yellow-flower/humctl-wrapper-demo.git
+   cd humctl-wrapper-demo
+   ```
+
+## Building
+
+Build the application:
 ```bash
-# Clone the repository
-git clone https://github.com/lil-yellow-flower/humctl-wrapper-demo.git
-cd humctl-wrapper-demo
-
-# Build the application
 go build -o humctl-wrapper
 ```
 
-## Create a .env file in root directory with your Humanitec credentials
+## Usage
 
-```env
-HUMANITEC_TOKEN=your-token-here
-HUMANITEC_ORG=your-org-here
-```
-
-## Available Commands
-
-### Get Applications
+The CLI provides commands to interact with the Humanitec platform. Here are the different ways to use the `get apps` command:
 
 ```bash
-# List applications (uses HUMANITEC_ORG from .env)
+# Get all applications (uses org from config.yaml)
 ./humctl-wrapper get apps
 
-# List applications for a specific organization
-./humctl-wrapper get apps --org different-org
+# Get applications for a specific organization
+./humctl-wrapper get apps --org your-org-id
 
-# Output formats
-./humctl-wrapper get apps -o json
-./humctl-wrapper get apps -o yaml
+# Get applications in different output formats
+./humctl-wrapper get apps --output table  # Default format
+./humctl-wrapper get apps --output json   # JSON format
+./humctl-wrapper get apps --output yaml   # YAML format
+
+# Combine options
+./humctl-wrapper get apps --org your-org-id --output json
 ```
 
-## Development
+## Configuration
 
-### Running Tests
+The CLI can be configured using a `config.yaml` file in the project root:
 
-```bash
-# Run all tests
-go test ./...
+```yaml
+# Humanitec API credentials
+humanitec_token: "your-api-token-here"
+humanitec_org: "your-org-id-here"
 
-# Run tests with verbose output
-go test -v ./internal/commands
-
-# Run specific test
-go test -v ./internal/commands -run TestGetApps/table_format
+# Default output format (table, json, yaml)
+default_output: "table"
 ```
 
 ## License
 
-MIT License - see [LICENSE](LICENSE)
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
