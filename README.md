@@ -27,7 +27,7 @@ go build -o humctl-wrapper.exe
 
 ## Configuration
 
-The CLI can be configured using a `config.yaml` file in the project root:
+The CLI requires a `config.yaml` file in the project root to run. Create this file with the following content:
 
 ```yaml
 # Humanitec API credentials
