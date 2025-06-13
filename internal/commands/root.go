@@ -17,7 +17,7 @@ type Config struct {
 }
 
 var (
-	version = "0.2.1"
+	version = "0.2.2"
 	commit  = "dev"
 	date    = "unknown"
 
