@@ -30,6 +30,13 @@ const (
 
 	// Add app command
 	AddAppCmdUse = "app"
+
+	// Delete command
+	DeleteCmdName = "delete"
+	DeleteCmdUse  = "delete"
+
+	// Delete app command
+	DeleteAppCmdUse = "app"
 )
 
 // Command descriptions
@@ -39,6 +46,8 @@ const (
 	GetAppsCmdShort = "Get applications from Humanitec platform"
 	AddCmdShort     = "Add resources to Humanitec platform"
 	AddAppCmdShort  = "Add application to Humanitec platform"
+	DeleteCmdShort  = "Delete resources from Humanitec platform"
+	DeleteAppCmdShort = "Delete an application from Humanitec platform"
 )
 
 // Flag names
@@ -93,6 +102,7 @@ const (
 	ErrInvalidName        = "invalid name: %v"
 	ErrInvalidSkipEnvCreation = "invalid skip-env-creation flag: %v"
 	ErrAddApp             = "failed to add application: %v"
+	ErrDeleteApp          = "failed to delete application: %v"
 	ErrLoadConfig         = "failed to load config: %v"
 )
 

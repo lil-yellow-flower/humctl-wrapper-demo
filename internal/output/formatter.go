@@ -95,4 +95,32 @@ func FormatApp(app *humanitec.App, format Format) (string, error) {
 	default:
 		return "", fmt.Errorf("unsupported format: %s", format)
 	}
+}
+
+// FormatMessage formats a simple message in the specified format.
+// JSON and Table formats include a trailing newline, while YAML format
+// uses the newline provided by the YAML marshaler.
+func FormatMessage(message string, format Format) (string, error) {
+	switch format {
+	case FormatJSON:
+		data, err := json.MarshalIndent(map[string]string{"message": message}, "", "  ")
+		if err != nil {
+			return "", fmt.Errorf("failed to marshal to JSON: %w", err)
+		}
+		return string(data) + "\n", nil
+
+	case FormatYAML:
+		data, err := yaml.Marshal(map[string]string{"message": message})
+		if err != nil {
+			return "", fmt.Errorf("failed to marshal to YAML: %w", err)
+		}
+		// YAML marshaling adds a newline, so we don't need to add another one
+		return string(data), nil
+
+	case FormatTable:
+		return message + "\n", nil
+
+	default:
+		return "", fmt.Errorf("unsupported format: %s", format)
+	}
 } 

@@ -22,6 +22,8 @@ type Client interface {
 	// CreateApp creates a new application with the given name
 	// If skipEnvCreation is true, no default environment will be created
 	CreateApp(name string, skipEnvCreation bool) (*App, error)
+	// DeleteApp deletes an application by its ID
+	DeleteApp(appID string) error
 }
 
 // humanitecClient represents a Humanitec API client
@@ -135,4 +137,31 @@ func (c *humanitecClient) CreateApp(name string, skipEnvCreation bool) (*App, er
 	}
 
 	return &app, nil
+}
+
+// DeleteApp deletes an application by its ID
+func (c *humanitecClient) DeleteApp(appID string) error {
+	if err := c.Validate(); err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/orgs/%s/apps/%s", c.baseURL, c.org, appID), nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiToken))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusAccepted {
+		return fmt.Errorf("API request failed with status %d", resp.StatusCode)
+	}
+
+	return nil
 }

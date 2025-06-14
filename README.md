@@ -40,7 +40,12 @@ default_output: "table"
 
 ## Usage
 
-The CLI provides commands to interact with the Humanitec platform. Here are the different ways to use the `get apps` command:
+The CLI provides commands to interact with the Humanitec platform. All commands support the following output formats:
+- `--output table` (default)
+- `--output json`
+- `--output yaml`
+
+### Get Applications
 
 ```bash
 # Get all applications (uses org from config.yaml)
@@ -56,6 +61,43 @@ The CLI provides commands to interact with the Humanitec platform. Here are the 
 
 # Combine options
 ./humctl-wrapper get apps --org your-org-id --output json
+```
+
+### Add Application
+
+```bash
+# Add a new application (uses org from config.yaml)
+./humctl-wrapper add app --name "My Application"
+
+# Add application for a specific organization
+./humctl-wrapper add app --name "My Application" --org your-org-id
+
+# Add application without creating default environment
+./humctl-wrapper add app --name "My Application" --skip-env-creation
+
+# Add application with different output formats
+./humctl-wrapper add app --name "My Application" --output json
+./humctl-wrapper add app --name "My Application" --output yaml
+
+# Using shorthand flags
+./humctl-wrapper add app -n "My Application" -g your-org-id -s -o json
+```
+
+### Delete Application
+
+```bash
+# Delete an application (uses org from config.yaml)
+./humctl-wrapper delete app --name my-app-id
+
+# Delete application for a specific organization
+./humctl-wrapper delete app --name my-app-id --org your-org-id
+
+# Delete application with different output formats
+./humctl-wrapper delete app --name my-app-id --output json
+./humctl-wrapper delete app --name my-app-id --output yaml
+
+# Using shorthand flags
+./humctl-wrapper delete app -n my-app-id -g your-org-id -o json
 ```
 
 ## License
