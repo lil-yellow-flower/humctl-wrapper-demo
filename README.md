@@ -100,6 +100,23 @@ The CLI provides commands to interact with the Humanitec platform. All commands 
 ./humctl-wrapper delete app -n my-app-id -g your-org-id -o json
 ```
 
+### Update Application
+
+```bash
+# Update an application name (uses org from config.yaml)
+./humctl-wrapper update app --name my-app-id --new-name "Updated App Name"
+
+# Update application for a specific organization
+./humctl-wrapper update app --name my-app-id --new-name "Updated App Name" --org your-org-id
+
+# Update application with different output formats
+./humctl-wrapper update app --name my-app-id --new-name "Updated App Name" --output json
+./humctl-wrapper update app --name my-app-id --new-name "Updated App Name" --output yaml
+
+# Using shorthand flags
+./humctl-wrapper update app -n my-app-id -m "Updated App Name" -g your-org-id -o json
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

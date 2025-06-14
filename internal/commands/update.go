@@ -9,16 +9,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var addCmd = &cobra.Command{
-	Use:   constants.AddCmdUse,
-	Short: constants.AddCmdShort,
+var updateCmd = &cobra.Command{
+	Use:   constants.UpdateCmdUse,
+	Short: constants.UpdateCmdShort,
 }
 
-var addAppCmd = &cobra.Command{
-	Use:   constants.AddAppCmdUse,
-	Short: constants.AddAppCmdShort,
-	Long: `Add a new application to the organization with the specified name.
-The application ID will be automatically generated from the name by converting it to lowercase and replacing spaces with hyphens.`,
+var updateAppCmd = &cobra.Command{
+	Use:   constants.UpdateAppCmdUse,
+	Short: constants.UpdateAppCmdShort,
+	Long: `Update an existing application in the organization.
+Currently supports updating the application name while preserving all other settings and configurations.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Get format from flag or config
 		formatStr, err := cmd.Flags().GetString(constants.OutputFlagName)
@@ -58,20 +58,20 @@ The application ID will be automatically generated from the name by converting i
 			return fmt.Errorf(constants.ErrInvalidName, err)
 		}
 
-		// Get skip environment creation flag
-		skipEnvCreation, err := cmd.Flags().GetBool(constants.SkipEnvCreationFlagName)
+		// Get new name from flag
+		newName, err := cmd.Flags().GetString(constants.NewNameFlagName)
 		if err != nil {
-			return fmt.Errorf(constants.ErrInvalidSkipEnvCreation, err)
+			return fmt.Errorf(constants.ErrInvalidNewName, err)
 		}
 
-		// Add application
-		app, err := client.CreateApp(name, skipEnvCreation)
+		// Update application
+		_, err = client.UpdateApp(name, newName)
 		if err != nil {
-			return fmt.Errorf(constants.ErrAddApp, err)
+			return fmt.Errorf(constants.ErrUpdateApp, err)
 		}
 
 		// Format and print output
-		formatted, err := output.FormatApp(app, format)
+		formatted, err := output.FormatMessage(constants.SuccessAppUpdated, format)
 		if err != nil {
 			return fmt.Errorf(constants.ErrFormatOutput, err)
 		}
@@ -82,15 +82,17 @@ The application ID will be automatically generated from the name by converting i
 }
 
 func init() {
-	// Add flags to add app command
-	addAppCmd.Flags().StringP(constants.NameFlagName, constants.NameFlagShort, "", constants.NameFlagHelp)
-	addAppCmd.MarkFlagRequired(constants.NameFlagName)
+	// Add flags to update app command
+	updateAppCmd.Flags().StringP(constants.NameFlagName, constants.NameFlagShort, "", constants.NameFlagHelp)
+	updateAppCmd.MarkFlagRequired(constants.NameFlagName)
 
-	addAppCmd.Flags().BoolP(constants.SkipEnvCreationFlagName, constants.SkipEnvCreationFlagShort, false, constants.SkipEnvCreationFlagHelp)
-	addAppCmd.Flags().StringP(constants.OrgFlagName, constants.OrgFlagShort, "", fmt.Sprintf("Humanitec organization ID (defaults to %s environment variable)", constants.HumanitecOrg))
-	addAppCmd.Flags().StringP(constants.OutputFlagName, constants.OutputFlagShort, "", constants.OutputFlagHelp)
+	updateAppCmd.Flags().StringP(constants.NewNameFlagName, constants.NewNameFlagShort, "", constants.NewNameFlagHelp)
+	updateAppCmd.MarkFlagRequired(constants.NewNameFlagName)
+
+	updateAppCmd.Flags().StringP(constants.OrgFlagName, constants.OrgFlagShort, "", fmt.Sprintf("Humanitec organization ID (defaults to %s environment variable)", constants.HumanitecOrg))
+	updateAppCmd.Flags().StringP(constants.OutputFlagName, constants.OutputFlagShort, "", constants.OutputFlagHelp)
 
 	// Add commands to hierarchy
-	addCmd.AddCommand(addAppCmd)
-	rootCmd.AddCommand(addCmd)
+	updateCmd.AddCommand(updateAppCmd)
+	rootCmd.AddCommand(updateCmd)
 } 

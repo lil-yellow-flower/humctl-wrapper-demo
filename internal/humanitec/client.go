@@ -24,6 +24,8 @@ type Client interface {
 	CreateApp(name string, skipEnvCreation bool) (*App, error)
 	// DeleteApp deletes an application by its ID
 	DeleteApp(appID string) error
+	// UpdateApp updates an application's name by its ID
+	UpdateApp(appID string, name string) (*App, error)
 }
 
 // humanitecClient represents a Humanitec API client
@@ -164,4 +166,47 @@ func (c *humanitecClient) DeleteApp(appID string) error {
 	}
 
 	return nil
+}
+
+// UpdateApp updates an application's name by its ID
+func (c *humanitecClient) UpdateApp(appID string, name string) (*App, error) {
+	if err := c.Validate(); err != nil {
+		return nil, err
+	}
+
+	payload := struct {
+		Name string `json:"name"`
+	}{
+		Name: name,
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal request: %w", err)
+	}
+
+	req, err := http.NewRequest("PATCH", fmt.Sprintf("%s/orgs/%s/apps/%s", c.baseURL, c.org, appID), bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiToken))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API request failed with status %d", resp.StatusCode)
+	}
+
+	var app App
+	if err := json.NewDecoder(resp.Body).Decode(&app); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &app, nil
 }

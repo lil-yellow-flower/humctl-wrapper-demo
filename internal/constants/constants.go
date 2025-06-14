@@ -37,6 +37,13 @@ const (
 
 	// Delete app command
 	DeleteAppCmdUse = "app"
+
+	// Update command
+	UpdateCmdName = "update"
+	UpdateCmdUse  = "update"
+
+	// Update app command
+	UpdateAppCmdUse = "app"
 )
 
 // Command descriptions
@@ -48,6 +55,8 @@ const (
 	AddAppCmdShort  = "Add application to Humanitec platform"
 	DeleteCmdShort  = "Delete resources from Humanitec platform"
 	DeleteAppCmdShort = "Delete an application from Humanitec platform"
+	UpdateCmdShort  = "Update resources in Humanitec platform"
+	UpdateAppCmdShort = "Update an application in Humanitec platform"
 )
 
 // Flag names
@@ -65,6 +74,7 @@ const (
 	// Add app flags
 	NameFlagName           = "name"
 	SkipEnvCreationFlagName = "skip-env-creation"
+	NewNameFlagName        = "new-name"
 )
 
 // Flag shorthands
@@ -73,6 +83,7 @@ const (
 	OrgFlagShort    = "g"
 	NameFlagShort   = "n"
 	SkipEnvCreationFlagShort = "s"
+	NewNameFlagShort        = "m"
 )
 
 // Help text
@@ -88,6 +99,7 @@ const (
 	// Add app help text
 	NameFlagHelp           = "Name of the resource"
 	SkipEnvCreationFlagHelp = "Skip environment creation"
+	NewNameFlagHelp        = "New name for the application"
 )
 
 // Error messages
@@ -101,9 +113,17 @@ const (
 	ErrClientInit         = "failed to initialize client: %v"
 	ErrInvalidName        = "invalid name: %v"
 	ErrInvalidSkipEnvCreation = "invalid skip-env-creation flag: %v"
+	ErrInvalidNewName     = "invalid new-name: %v"
 	ErrAddApp             = "failed to add application: %v"
 	ErrDeleteApp          = "failed to delete application: %v"
+	ErrUpdateApp          = "failed to update application: %v"
 	ErrLoadConfig         = "failed to load config: %v"
+	ErrAPIError           = "API error"
+)
+
+// Success messages
+const (
+	SuccessAppUpdated = "Application successfully updated"
 )
 
 // Config-related constants
