@@ -27,7 +27,7 @@ func (m *mockDeleteClient) CreateApp(name string, skipEnvCreation bool) (*humani
 	return nil, nil
 }
 
-func (m *mockDeleteClient) DeleteApp(appID string) error {
+func (m *mockDeleteClient) DeleteApp(name string) error {
 	return m.error
 }
 

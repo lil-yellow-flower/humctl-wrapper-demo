@@ -19,13 +19,15 @@ type App struct {
 type Client interface {
 	// GetApps retrieves all applications in the organization
 	GetApps() ([]App, error)
+	// GetApp retrieves a specific application by its ID
+	GetApp(name string) (*App, error)
 	// CreateApp creates a new application with the given name
 	// If skipEnvCreation is true, no default environment will be created
 	CreateApp(name string, skipEnvCreation bool) (*App, error)
 	// DeleteApp deletes an application by its ID
-	DeleteApp(appID string) error
+	DeleteApp(name string) error
 	// UpdateApp updates an application's name by its ID
-	UpdateApp(appID string, name string) (*App, error)
+	UpdateApp(oldName string, newName string) (*App, error)
 }
 
 // humanitecClient represents a Humanitec API client
@@ -91,6 +93,41 @@ func (c *humanitecClient) GetApps() ([]App, error) {
 	return apps, nil
 }
 
+// GetApp returns a specific application by its ID
+func (c *humanitecClient) GetApp(name string) (*App, error) {
+	if err := c.Validate(); err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("GET", fmt.Sprintf("%s/orgs/%s/apps/%s", c.baseURL, c.org, name), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", c.apiToken))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, fmt.Errorf("application not found")
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API request failed with status %d", resp.StatusCode)
+	}
+
+	var app App
+	if err := json.NewDecoder(resp.Body).Decode(&app); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	return &app, nil
+}
+
 // CreateApp creates a new application in the organization
 func (c *humanitecClient) CreateApp(name string, skipEnvCreation bool) (*App, error) {
 	if err := c.Validate(); err != nil {
@@ -142,12 +179,12 @@ func (c *humanitecClient) CreateApp(name string, skipEnvCreation bool) (*App, er
 }
 
 // DeleteApp deletes an application by its ID
-func (c *humanitecClient) DeleteApp(appID string) error {
+func (c *humanitecClient) DeleteApp(name string) error {
 	if err := c.Validate(); err != nil {
 		return err
 	}
 
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/orgs/%s/apps/%s", c.baseURL, c.org, appID), nil)
+	req, err := http.NewRequest("DELETE", fmt.Sprintf("%s/orgs/%s/apps/%s", c.baseURL, c.org, name), nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -169,7 +206,7 @@ func (c *humanitecClient) DeleteApp(appID string) error {
 }
 
 // UpdateApp updates an application's name by its ID
-func (c *humanitecClient) UpdateApp(appID string, name string) (*App, error) {
+func (c *humanitecClient) UpdateApp(oldName string, newName string) (*App, error) {
 	if err := c.Validate(); err != nil {
 		return nil, err
 	}
@@ -177,7 +214,7 @@ func (c *humanitecClient) UpdateApp(appID string, name string) (*App, error) {
 	payload := struct {
 		Name string `json:"name"`
 	}{
-		Name: name,
+		Name: newName,
 	}
 
 	jsonData, err := json.Marshal(payload)
@@ -185,7 +222,7 @@ func (c *humanitecClient) UpdateApp(appID string, name string) (*App, error) {
 		return nil, fmt.Errorf("failed to marshal request: %w", err)
 	}
 
-	req, err := http.NewRequest("PATCH", fmt.Sprintf("%s/orgs/%s/apps/%s", c.baseURL, c.org, appID), bytes.NewBuffer(jsonData))
+	req, err := http.NewRequest("PATCH", fmt.Sprintf("%s/orgs/%s/apps/%s", c.baseURL, c.org, oldName), bytes.NewBuffer(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}

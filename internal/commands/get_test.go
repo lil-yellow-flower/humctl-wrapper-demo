@@ -17,6 +17,7 @@ import (
 // mockClient implements the humanitec.Client interface for testing
 type mockClient struct {
 	apps  []humanitec.App
+	app   *humanitec.App
 	error error
 }
 
@@ -29,6 +30,13 @@ func (m *mockClient) GetApps() ([]humanitec.App, error) {
 
 func (m *mockClient) CreateApp(name string, skipEnvCreation bool) (*humanitec.App, error) {
 	return nil, nil
+}
+
+func (m *mockClient) GetApp(name string) (*humanitec.App, error) {
+	if m.error != nil {
+		return nil, m.error
+	}
+	return m.app, nil
 }
 
 // setupTestCommand creates a test command with the given mock client
@@ -73,10 +81,56 @@ func setupTestCommand(t *testing.T, mockClient *mockClient) *cobra.Command {
 		},
 	}
 
-	// Add output format flag
+	// Create get app command
+	getAppCmd := &cobra.Command{
+		Use:   constants.GetAppCmdUse,
+		Short: constants.GetAppCmdShort,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Get format from flag
+			formatStr, err := cmd.Flags().GetString(constants.OutputFlagName)
+			if err != nil {
+				return fmt.Errorf(constants.ErrInvalidOutputFormat, err)
+			}
+
+			// Validate format
+			format, err := output.ValidateFormat(formatStr)
+			if err != nil {
+				return fmt.Errorf(constants.ErrInvalidOutputFormat, err)
+			}
+
+			// Get name from flag
+			name, err := cmd.Flags().GetString(constants.NameFlagName)
+			if err != nil {
+				return fmt.Errorf(constants.ErrInvalidName, err)
+			}
+
+			// Get application
+			app, err := mockClient.GetApp(name)
+			if err != nil {
+				return fmt.Errorf(constants.ErrGetApp, err)
+			}
+
+			// Format and print output
+			formatted, err := output.FormatApp(app, format)
+			if err != nil {
+				return fmt.Errorf(constants.ErrFormatOutput, err)
+			}
+			fmt.Fprint(cmd.OutOrStdout(), formatted)
+
+			return nil
+		},
+	}
+
+	// Add flags to get app command
+	getAppCmd.Flags().StringP(constants.NameFlagName, constants.NameFlagShort, "", constants.NameFlagHelp)
+	getAppCmd.MarkFlagRequired(constants.NameFlagName)
+	getAppCmd.Flags().StringP(constants.OutputFlagName, constants.OutputFlagShort, constants.DefaultOutputFormat, constants.OutputFlagHelp)
+
+	// Add output format flag to get command
 	getCmd.Flags().StringP(constants.OutputFlagName, constants.OutputFlagShort, constants.DefaultOutputFormat, constants.OutputFlagHelp)
 
 	// Add commands to hierarchy
+	getCmd.AddCommand(getAppCmd)
 	rootCmd.AddCommand(getCmd)
 
 	return rootCmd
@@ -139,6 +193,102 @@ func TestGetApps(t *testing.T) {
 			err := cmd.Execute()
 
 			// Check error
+			if tt.expectError {
+				if err == nil {
+					t.Error("Expected error but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("Unexpected error: %v", err)
+				return
+			}
+
+			// Check output
+			output := outBuf.String()
+			if output != tt.expectedOutput {
+				t.Errorf("Expected output:\n%q\nGot:\n%q", tt.expectedOutput, output)
+			}
+		})
+	}
+}
+
+func TestGetApp(t *testing.T) {
+	// Setup test config
+	configFile := testutil.SetupTestConfig(t)
+	defer os.Remove(configFile)
+
+	// Create a mock client
+	mockClient := &mockClient{
+		app: &humanitec.App{
+			ID:   "test-app",
+			Name: "Test App",
+		},
+	}
+
+	// Test cases
+	tests := []struct {
+		name           string
+		args           []string
+		expectedOutput string
+		expectError    bool
+		mockError      error
+	}{
+		{
+			name:           "table format",
+			args:           []string{"get", "app", "--name", "test-app"},
+			expectedOutput: "NAME\tID\n----\t--\nTest App\ttest-app\n",
+		},
+		{
+			name:           "json format",
+			args:           []string{"get", "app", "--name", "test-app", "--output", "json"},
+			expectedOutput: "{\n  \"id\": \"test-app\",\n  \"name\": \"Test App\"\n}\n",
+		},
+		{
+			name:           "yaml format",
+			args:           []string{"get", "app", "--name", "test-app", "--output", "yaml"},
+			expectedOutput: "id: test-app\nname: Test App\n",
+		},
+		{
+			name:        "missing name flag",
+			args:        []string{"get", "app"},
+			expectError: true,
+		},
+		{
+			name:        "invalid output format",
+			args:        []string{"get", "app", "--name", "test-app", "--output", "invalid"},
+			expectError: true,
+		},
+		{
+			name:        "api error",
+			args:        []string{"get", "app", "--name", "test-app"},
+			expectError: true,
+			mockError:   fmt.Errorf("API error"),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create test command
+			cmd := setupTestCommand(t, mockClient)
+			cmd.SetArgs(tt.args)
+
+			// Set up output buffer
+			outBuf := new(bytes.Buffer)
+			cmd.SetOut(outBuf)
+			cmd.SetErr(outBuf)
+
+			// Set mock error if specified
+			if tt.mockError != nil {
+				mockClient.error = tt.mockError
+			} else {
+				mockClient.error = nil
+			}
+
+			// Execute the command
+			err := cmd.Execute()
+
+			// Check error expectations
 			if tt.expectError {
 				if err == nil {
 					t.Error("Expected error but got none")

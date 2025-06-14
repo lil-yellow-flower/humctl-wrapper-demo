@@ -63,6 +63,24 @@ The CLI provides commands to interact with the Humanitec platform. All commands 
 ./humctl-wrapper get apps --org your-org-id --output json
 ```
 
+### Get Application
+
+```bash
+# Get a specific application (uses org from config.yaml)
+./humctl-wrapper get app --name my-app-id
+
+# Get application for a specific organization
+./humctl-wrapper get app --name my-app-id --org your-org-id
+
+# Get application in different output formats
+./humctl-wrapper get app --name my-app-id --output table  # Default format
+./humctl-wrapper get app --name my-app-id --output json   # JSON format
+./humctl-wrapper get app --name my-app-id --output yaml   # YAML format
+
+# Using shorthand flags
+./humctl-wrapper get app -n my-app-id -g your-org-id -o json
+```
+
 ### Add Application
 
 ```bash

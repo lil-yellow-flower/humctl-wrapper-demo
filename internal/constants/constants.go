@@ -44,6 +44,9 @@ const (
 
 	// Update app command
 	UpdateAppCmdUse = "app"
+
+	// Get app command
+	GetAppCmdUse = "app"
 )
 
 // Command descriptions
@@ -57,6 +60,7 @@ const (
 	DeleteAppCmdShort = "Delete an application from Humanitec platform"
 	UpdateCmdShort  = "Update resources in Humanitec platform"
 	UpdateAppCmdShort = "Update an application in Humanitec platform"
+	GetAppCmdShort = "Get a specific application from Humanitec platform"
 )
 
 // Flag names
@@ -119,6 +123,7 @@ const (
 	ErrUpdateApp          = "failed to update application: %v"
 	ErrLoadConfig         = "failed to load config: %v"
 	ErrAPIError           = "API error"
+	ErrGetApp             = "failed to get application: %v"
 )
 
 // Success messages
