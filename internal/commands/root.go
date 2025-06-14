@@ -11,13 +11,16 @@ import (
 
 // Config represents the application configuration
 type Config struct {
+	// HumanitecToken is the API token for authenticating with Humanitec
 	HumanitecToken string `yaml:"humanitec_token"`
-	HumanitecOrg   string `yaml:"humanitec_org"`
-	DefaultOutput  string `yaml:"default_output"`
+	// HumanitecOrg is the organization ID in Humanitec
+	HumanitecOrg string `yaml:"humanitec_org"`
+	// DefaultOutput is the default output format (table, json, or yaml)
+	DefaultOutput string `yaml:"default_output"`
 }
 
 var (
-	version = "0.2.3"
+	version = "0.3.0"
 	commit  = "dev"
 	date    = "unknown"
 

@@ -2,16 +2,16 @@ package commands
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
 
 	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/constants"
 	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/humanitec"
+	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/output"
+	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/testutil"
 	"github.com/spf13/cobra"
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
 )
 
 // mockClient implements the humanitec.Client interface for testing
@@ -27,33 +27,8 @@ func (m *mockClient) GetApps() ([]humanitec.App, error) {
 	return m.apps, nil
 }
 
-// setupTestConfig creates a temporary config.yaml file for testing
-func setupTestConfig(t *testing.T) string {
-	// Create a temporary config file
-	tmpFile, err := os.CreateTemp("", "config-*.yaml")
-	if err != nil {
-		t.Fatalf("Failed to create temp file: %v", err)
-	}
-
-	// Write test config
-	config := fmt.Sprintf(`%s: "test-token"
-%s: "test-org"
-default_output: "table"
-logging:
-  level: "info"
-  format: "text"
-  output: "stdout"
-  file: "logs/humctl-wrapper.log"`, constants.HumanitecToken, constants.HumanitecOrg)
-
-	if _, err := tmpFile.WriteString(config); err != nil {
-		t.Fatalf("Failed to write config: %v", err)
-	}
-
-	if err := tmpFile.Close(); err != nil {
-		t.Fatalf("Failed to close config file: %v", err)
-	}
-
-	return tmpFile.Name()
+func (m *mockClient) CreateApp(name string, skipEnvCreation bool) (*humanitec.App, error) {
+	return nil, nil
 }
 
 // setupTestCommand creates a test command with the given mock client
@@ -68,15 +43,18 @@ func setupTestCommand(t *testing.T, mockClient *mockClient) *cobra.Command {
 	getCmd := &cobra.Command{
 		Use:   "get",
 		Short: "Get resources",
-	}
-
-	// Create apps command
-	appsCmd := &cobra.Command{
-		Use:   "apps",
-		Short: "Get applications",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Get output format
-			outputFormat, _ := cmd.Flags().GetString("output")
+			// Get format from flag
+			formatStr, err := cmd.Flags().GetString(constants.OutputFlagName)
+			if err != nil {
+				return fmt.Errorf(constants.ErrInvalidOutputFormat, err)
+			}
+
+			// Validate format
+			format, err := output.ValidateFormat(formatStr)
+			if err != nil {
+				return fmt.Errorf(constants.ErrInvalidOutputFormat, err)
+			}
 
 			// Get apps
 			apps, err := mockClient.GetApps()
@@ -84,38 +62,21 @@ func setupTestCommand(t *testing.T, mockClient *mockClient) *cobra.Command {
 				return err
 			}
 
-			// Format output
-			switch outputFormat {
-			case "json":
-				jsonOutput, err := json.MarshalIndent(apps, "", "  ")
-				if err != nil {
-					return err
-				}
-				fmt.Fprintln(cmd.OutOrStdout(), string(jsonOutput))
-			case "yaml":
-				yamlOutput, err := yaml.Marshal(apps)
-				if err != nil {
-					return err
-				}
-				fmt.Fprint(cmd.OutOrStdout(), string(yamlOutput))
-			case "table":
-				fmt.Fprintln(cmd.OutOrStdout(), "ID\tNAME")
-				for _, app := range apps {
-					fmt.Fprintf(cmd.OutOrStdout(), "%s\t%s\n", app.ID, app.Name)
-				}
-			default:
-				return fmt.Errorf("invalid output format: %s", outputFormat)
+			// Format and print output
+			formatted, err := output.FormatApps(apps, format)
+			if err != nil {
+				return fmt.Errorf(constants.ErrFormatOutput, err)
 			}
+			fmt.Fprint(cmd.OutOrStdout(), formatted)
 
 			return nil
 		},
 	}
 
 	// Add output format flag
-	appsCmd.Flags().StringP("output", "o", constants.DefaultOutputFormat, "Output format (table|json|yaml)")
+	getCmd.Flags().StringP(constants.OutputFlagName, constants.OutputFlagShort, constants.DefaultOutputFormat, constants.OutputFlagHelp)
 
 	// Add commands to hierarchy
-	getCmd.AddCommand(appsCmd)
 	rootCmd.AddCommand(getCmd)
 
 	return rootCmd
@@ -123,7 +84,7 @@ func setupTestCommand(t *testing.T, mockClient *mockClient) *cobra.Command {
 
 func TestGetApps(t *testing.T) {
 	// Setup test config
-	configFile := setupTestConfig(t)
+	configFile := testutil.SetupTestConfig(t)
 	defer os.Remove(configFile)
 
 	// Create a mock client
@@ -143,22 +104,22 @@ func TestGetApps(t *testing.T) {
 	}{
 		{
 			name:           "table format",
-			args:           []string{"get", "apps"},
-			expectedOutput: "ID\tNAME\napp1\tApp 1\napp2\tApp 2\n",
+			args:           []string{"get"},
+			expectedOutput: "NAME\tID\n----\t--\nApp 1\tapp1\nApp 2\tapp2\n",
 		},
 		{
 			name:           "json format",
-			args:           []string{"get", "apps", "--output", "json"},
+			args:           []string{"get", "--output", "json"},
 			expectedOutput: "[\n  {\n    \"id\": \"app1\",\n    \"name\": \"App 1\"\n  },\n  {\n    \"id\": \"app2\",\n    \"name\": \"App 2\"\n  }\n]\n",
 		},
 		{
 			name:           "yaml format",
-			args:           []string{"get", "apps", "--output", "yaml"},
+			args:           []string{"get", "--output", "yaml"},
 			expectedOutput: "- id: app1\n  name: App 1\n- id: app2\n  name: App 2\n",
 		},
 		{
 			name:        "invalid format",
-			args:        []string{"get", "apps", "--output", "invalid"},
+			args:        []string{"get", "--output", "invalid"},
 			expectError: true,
 		},
 	}
@@ -201,18 +162,13 @@ func TestGetApps(t *testing.T) {
 func TestCommandStructure(t *testing.T) {
 	// Test root command
 	assert.Equal(t, constants.RootCmdUse, rootCmd.Use, "root command should have correct use")
-	assert.Equal(t, "A command line interface wrapper for Humanitec platform", rootCmd.Short, "root command should have correct short description")
+	assert.Equal(t, constants.RootCmdShort, rootCmd.Short, "root command should have correct short description")
 
 	// Test get command
 	assert.Equal(t, constants.GetCmdUse, getCmd.Use, "get command should have correct use")
-	assert.Equal(t, "Get resources from Humanitec platform", getCmd.Short, "get command should have correct short description")
-
-	// Test get apps command
-	assert.Equal(t, constants.GetAppsCmdUse, getAppsCmd.Use, "get apps command should have correct use")
-	assert.Equal(t, "Get applications from Humanitec platform", getAppsCmd.Short, "get apps command should have correct short description")
+	assert.Equal(t, constants.GetCmdShort, getCmd.Short, "get command should have correct short description")
 
 	// Test flags
-	assert.True(t, getAppsCmd.Flags().HasFlags(), "get apps command should have flags")
-	assert.True(t, getAppsCmd.Flags().Lookup(constants.OutputFlagName) != nil, "get apps command should have output flag")
-	assert.True(t, getAppsCmd.Flags().Lookup(constants.OrgFlagName) != nil, "get apps command should have org flag")
+	assert.True(t, getCmd.Flags().HasFlags(), "get command should have flags")
+	assert.True(t, getCmd.Flags().Lookup(constants.OutputFlagName) != nil, "get command should have output flag")
 } 
