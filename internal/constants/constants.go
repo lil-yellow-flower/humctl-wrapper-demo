@@ -12,55 +12,26 @@ const (
 	DefaultConfigFile   = "$HOME/config.yaml"
 )
 
-// Command names
+// Command use strings
 const (
-	RootCmdName = "humctl-wrapper-demo"
-	RootCmdUse  = "humctl"
-
-	// Get command
-	GetCmdName = "get"
-	GetCmdUse   = "get"
-
-	// Get apps command
-	GetAppsCmdUse = "apps"
-
-	// Add command
-	AddCmdName = "add"
-	AddCmdUse   = "add"
-
-	// Add app command
-	AddAppCmdUse = "app"
-
-	// Delete command
-	DeleteCmdName = "delete"
-	DeleteCmdUse  = "delete"
-
-	// Delete app command
-	DeleteAppCmdUse = "app"
-
-	// Update command
-	UpdateCmdName = "update"
-	UpdateCmdUse  = "update"
-
-	// Update app command
-	UpdateAppCmdUse = "app"
-
-	// Get app command
-	GetAppCmdUse = "app"
+	RootCmdUse   = "humctl-wrapper"
+	GetCmdUse    = "get"
+	CreateCmdUse = "create"
+	UpdateCmdUse = "update"
+	DeleteCmdUse = "delete"
+	AppsCmdUse   = "apps"
+	AppCmdUse    = "app"
 )
 
-// Command descriptions
+// Command short descriptions
 const (
-	RootCmdShort    = "A command line interface wrapper for Humanitec platform"
-	GetCmdShort     = "Get resources from Humanitec platform"
-	GetAppsCmdShort = "Get applications from Humanitec platform"
-	AddCmdShort     = "Add resources to Humanitec platform"
-	AddAppCmdShort  = "Add application to Humanitec platform"
-	DeleteCmdShort  = "Delete resources from Humanitec platform"
-	DeleteAppCmdShort = "Delete an application from Humanitec platform"
-	UpdateCmdShort  = "Update resources in Humanitec platform"
-	UpdateAppCmdShort = "Update an application in Humanitec platform"
-	GetAppCmdShort = "Get a specific application from Humanitec platform"
+	RootCmdShort   = "A wrapper for the Humanitec CLI"
+	GetCmdShort    = "Get resources"
+	CreateCmdShort = "Create resources"
+	UpdateCmdShort = "Update resources"
+	DeleteCmdShort = "Delete resources"
+	AppsCmdShort   = "Manage applications"
+	AppCmdShort    = "Manage a single application"
 )
 
 // Flag names
@@ -75,19 +46,17 @@ const (
 	OutputFlagName = "output"
 	OrgFlagName    = "org"
 
-	// Add app flags
+	// Create app flags
 	NameFlagName           = "name"
 	SkipEnvCreationFlagName = "skip-env-creation"
-	NewNameFlagName        = "new-name"
-)
+	IDFlagName             = "id"
 
-// Flag shorthands
-const (
+	// Flag shorthands
 	OutputFlagShort = "o"
 	OrgFlagShort    = "g"
 	NameFlagShort   = "n"
 	SkipEnvCreationFlagShort = "s"
-	NewNameFlagShort        = "m"
+	IDFlagShort             = "i"
 )
 
 // Help text
@@ -100,10 +69,10 @@ const (
 	OutputFlagHelp = "Output format (table|json|yaml)"
 	OrgFlagHelp    = "Humanitec organization ID (defaults to %s environment variable)"
 
-	// Add app help text
-	NameFlagHelp           = "Name of the resource"
+	// Create app help text
+	NameFlagHelp           = "Name of the application"
 	SkipEnvCreationFlagHelp = "Skip environment creation"
-	NewNameFlagHelp        = "New name for the application"
+	IDFlagHelp             = "Application ID"
 )
 
 // Error messages
@@ -117,13 +86,21 @@ const (
 	ErrClientInit         = "failed to initialize client: %v"
 	ErrInvalidName        = "invalid name: %v"
 	ErrInvalidSkipEnvCreation = "invalid skip-env-creation flag: %v"
-	ErrInvalidNewName     = "invalid new-name: %v"
-	ErrAddApp             = "failed to add application: %v"
+	ErrCreateApp          = "failed to create application: %v"
 	ErrDeleteApp          = "failed to delete application: %v"
 	ErrUpdateApp          = "failed to update application: %v"
 	ErrLoadConfig         = "failed to load config: %v"
+	ErrMissingAPIToken    = "API token is required"
 	ErrAPIError           = "API error"
 	ErrGetApp             = "failed to get application: %v"
+
+	// Create command error messages
+	CreateErrorMissingID   = "Error: required flag(s) \"id\" not set"
+	CreateErrorMissingName = "Error: required flag(s) \"name\" not set"
+	CreateErrorInvalidID   = "Error: invalid id format: must match pattern ^[a-z0-9](?:-?[a-z0-9]+)+$"
+	CreateErrorIDTooLong   = "Error: invalid id format: must be 50 characters or less"
+	CreateErrorDuplicateID = "Error: application with id '%s' already exists"
+	CreateErrorServerError = "Error: failed to create app: %s"
 )
 
 // Success messages
@@ -134,5 +111,5 @@ const (
 // Config-related constants
 const (
 	ConfigDir = "humctl"
-	ConfigFile = "config.json"
+	ConfigFile = "config.yaml"
 ) 

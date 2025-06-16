@@ -61,78 +61,74 @@ The CLI provides commands to interact with the Humanitec platform. All commands 
 
 # Combine options
 ./humctl-wrapper get apps --org your-org-id --output json
-```
 
-### Get Application
+# Get a specific application by ID
+./humctl-wrapper get apps --id my-app-id
 
-```bash
-# Get a specific application (uses org from config.yaml)
-./humctl-wrapper get app --name my-app-id
+# Get specific application for a specific organization
+./humctl-wrapper get apps --id my-app-id --org your-org-id
 
-# Get application for a specific organization
-./humctl-wrapper get app --name my-app-id --org your-org-id
-
-# Get application in different output formats
-./humctl-wrapper get app --name my-app-id --output table  # Default format
-./humctl-wrapper get app --name my-app-id --output json   # JSON format
-./humctl-wrapper get app --name my-app-id --output yaml   # YAML format
+# Get specific application in different output formats
+./humctl-wrapper get apps --id my-app-id --output table  # Default format
+./humctl-wrapper get apps --id my-app-id --output json   # JSON format
+./humctl-wrapper get apps --id my-app-id --output yaml   # YAML format
 
 # Using shorthand flags
-./humctl-wrapper get app -n my-app-id -g your-org-id -o json
+./humctl-wrapper get apps -i my-app-id -g your-org-id -o json
 ```
 
-### Add Application
+### Create Application
 
 ```bash
-# Add a new application (uses org from config.yaml)
-./humctl-wrapper add app --name "My Application"
+# Create a new application (uses org from config.yaml)
+./humctl-wrapper create app --id my-app --name "My Application"
 
-# Add application for a specific organization
-./humctl-wrapper add app --name "My Application" --org your-org-id
+# Create application for a specific organization
+./humctl-wrapper create app --id my-app --name "My Application" --org your-org-id
 
-# Add application without creating default environment
-./humctl-wrapper add app --name "My Application" --skip-env-creation
+# Create application without creating default environment
+./humctl-wrapper create app --id my-app --name "My Application" --skip-env-creation
 
-# Add application with different output formats
-./humctl-wrapper add app --name "My Application" --output json
-./humctl-wrapper add app --name "My Application" --output yaml
+# Create application with different output formats
+./humctl-wrapper create app --id my-app --name "My Application" --output json
+./humctl-wrapper create app --id my-app --name "My Application" --output yaml
 
 # Using shorthand flags
-./humctl-wrapper add app -n "My Application" -g your-org-id -s -o json
+./humctl-wrapper create app -i my-app -n "My Application" -g your-org-id -s -o json
 ```
 
 ### Delete Application
 
 ```bash
 # Delete an application (uses org from config.yaml)
-./humctl-wrapper delete app --name my-app-id
+./humctl-wrapper delete app --id my-app-id
 
 # Delete application for a specific organization
-./humctl-wrapper delete app --name my-app-id --org your-org-id
+./humctl-wrapper delete app --id my-app-id --org your-org-id
 
 # Delete application with different output formats
-./humctl-wrapper delete app --name my-app-id --output json
-./humctl-wrapper delete app --name my-app-id --output yaml
+./humctl-wrapper delete app --id my-app-id --output json
+./humctl-wrapper delete app --id my-app-id --output yaml
 
 # Using shorthand flags
-./humctl-wrapper delete app -n my-app-id -g your-org-id -o json
+./humctl-wrapper delete app -i my-app-id -g your-org-id -o json
 ```
 
 ### Update Application
 
 ```bash
 # Update an application name (uses org from config.yaml)
-./humctl-wrapper update app --name my-app-id --new-name "Updated App Name"
+./humctl-wrapper update app --id my-app-id --new-name "Updated App Name"
 
 # Update application for a specific organization
-./humctl-wrapper update app --name my-app-id --new-name "Updated App Name" --org your-org-id
+./humctl-wrapper update app --id my-app-id --new-name "Updated App Name" --org your-org-id
 
 # Update application with different output formats
-./humctl-wrapper update app --name my-app-id --new-name "Updated App Name" --output json
-./humctl-wrapper update app --name my-app-id --new-name "Updated App Name" --output yaml
+./humctl-wrapper update app --id my-app-id --new-name "Updated App Name" --output json
+./humctl-wrapper update app --id my-app-id --new-name "Updated App Name" --output yaml
 
 # Using shorthand flags
-./humctl-wrapper update app -n my-app-id -m "Updated App Name" -g your-org-id -o json
+./humctl-wrapper update app -i my-app-id -m "Updated App Name" -g your-org-id -o json
 ```
 
 ## License

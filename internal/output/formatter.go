@@ -48,7 +48,6 @@ func FormatApps(apps []humanitec.App, format Format) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to marshal to YAML: %w", err)
 		}
-		// YAML marshaling adds a newline, so we don't need to add another one
 		return string(data), nil
 
 	case FormatTable:
@@ -82,7 +81,6 @@ func FormatApp(app *humanitec.App, format Format) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("failed to marshal to YAML: %w", err)
 		}
-		// YAML marshaling adds a newline, so we don't need to add another one
 		return string(data), nil
 
 	case FormatTable:

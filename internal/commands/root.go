@@ -2,89 +2,81 @@ package commands
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/config"
 	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/constants"
+	"github.com/lil-yellow-flower/humctl-wrapper-demo/internal/commands/apps"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v3"
 )
-
-// Config represents the application configuration
-type Config struct {
-	// HumanitecToken is the API token for authenticating with Humanitec
-	HumanitecToken string `yaml:"humanitec_token"`
-	// HumanitecOrg is the organization ID in Humanitec
-	HumanitecOrg string `yaml:"humanitec_org"`
-	// DefaultOutput is the default output format (table, json, or yaml)
-	DefaultOutput string `yaml:"default_output"`
-}
 
 var (
+	// These variables are set during build time using ldflags
 	version = "0.5.0"
-	commit  = "dev"
+	commit  = "unknown"
 	date    = "unknown"
-
-	// Global config instance
-	config Config
-
-	rootCmd = &cobra.Command{
-		Use:     constants.RootCmdUse,
-		Short:   "A command line interface wrapper for Humanitec platform",
-		Long:    `A command line interface wrapper for Humanitec platform that provides basic CRUD operations for managing resources.`,
-		Version: fmt.Sprintf("%s", version),
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			// Load config file
-			if err := loadConfig("config.yaml"); err != nil {
-				return fmt.Errorf("error loading config: %v", err)
-			}
-
-			// Verify required configuration values are set
-			if config.HumanitecToken == "" {
-				return fmt.Errorf(constants.ErrMissingToken)
-			}
-			if config.HumanitecOrg == "" {
-				return fmt.Errorf(constants.ErrMissingOrg)
-			}
-
-			return nil
-		},
-	}
 )
 
-// loadConfig loads configuration from a YAML file
-func loadConfig(configFile string) error {
-	// Read config file
-	data, err := os.ReadFile(configFile)
-	if err != nil {
-		return fmt.Errorf("error reading config file: %v", err)
-	}
+var RootCmd = &cobra.Command{
+	Use:     "humctl-wrapper",
+	Short:   "A wrapper for the Humanitec CLI",
+	Long:    `A wrapper for the Humanitec CLI that provides additional functionality and a more user-friendly interface.`,
+	Version: fmt.Sprintf("%s (commit: %s, built: %s)", version, commit, date),
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if err := config.Initialize("config.yaml"); err != nil {
+			return fmt.Errorf("error loading config: %v", err)
+		}
 
-	// Parse YAML
-	if err := yaml.Unmarshal(data, &config); err != nil {
-		return fmt.Errorf("error parsing config file: %v", err)
-	}
+		cfg := config.GetConfig()
+		if cfg.HumanitecToken == "" {
+			return fmt.Errorf(constants.ErrMissingToken)
+		}
+		if cfg.HumanitecOrg == "" {
+			return fmt.Errorf(constants.ErrMissingOrg)
+		}
 
-	// Set default values if not specified
-	if config.DefaultOutput == "" {
-		config.DefaultOutput = constants.DefaultOutputFormat
-	}
-
-	return nil
-}
-
-// GetConfig returns the current configuration
-func GetConfig() Config {
-	return config
+		return nil
+	},
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 func Execute() error {
-	// Add get command to root
-	rootCmd.AddCommand(getCmd)
-	return rootCmd.Execute()
+	// Add get command
+	getCmd := &cobra.Command{
+		Use:   constants.GetCmdUse,
+		Short: constants.GetCmdShort,
+	}
+	RootCmd.AddCommand(getCmd)
+	
+	// Add create command
+	createCmd := &cobra.Command{
+		Use:   constants.CreateCmdUse,
+		Short: constants.CreateCmdShort,
+	}
+	RootCmd.AddCommand(createCmd)
+
+	// Add update command
+	updateCmd := &cobra.Command{
+		Use:   constants.UpdateCmdUse,
+		Short: constants.UpdateCmdShort,
+	}
+	RootCmd.AddCommand(updateCmd)
+
+	// Add delete command
+	deleteCmd := &cobra.Command{
+		Use:   constants.DeleteCmdUse,
+		Short: constants.DeleteCmdShort,
+	}
+	RootCmd.AddCommand(deleteCmd)
+
+	// Add apps as subcommand of each verb
+	getCmd.AddCommand(apps.GetCommand())
+	createCmd.AddCommand(apps.CreateCommand())
+	updateCmd.AddCommand(apps.UpdateCommand())
+	deleteCmd.AddCommand(apps.DeleteCommand())
+
+	return RootCmd.Execute()
 }
 
 func init() {
-	// Add version flag
-	rootCmd.PersistentFlags().BoolP(constants.VersionFlagName, constants.VersionFlagShort, false, "Print the version number")
+	RootCmd.PersistentFlags().BoolP(constants.VersionFlagName, constants.VersionFlagShort, false, "Print the version number")
 } 

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -21,13 +20,48 @@ type Client interface {
 	GetApps() ([]App, error)
 	// GetApp retrieves a specific application by its ID
 	GetApp(name string) (*App, error)
-	// CreateApp creates a new application with the given name
+	// CreateApp creates a new application with the given ID and name
 	// If skipEnvCreation is true, no default environment will be created
-	CreateApp(name string, skipEnvCreation bool) (*App, error)
+	CreateApp(id string, name string, skipEnvCreation bool) (*App, error)
 	// DeleteApp deletes an application by its ID
 	DeleteApp(name string) error
 	// UpdateApp updates an application's name by its ID
 	UpdateApp(oldName string, newName string) (*App, error)
+}
+
+// ClientFactory creates Humanitec clients
+type ClientFactory interface {
+	NewClient(token, org string) Client
+}
+
+// DefaultClientFactory is the default implementation of ClientFactory
+type DefaultClientFactory struct{}
+
+var (
+	// defaultFactory is the default client factory
+	defaultFactory ClientFactory = &DefaultClientFactory{}
+)
+
+// SetClientFactory sets the client factory (for testing only)
+func SetClientFactory(factory ClientFactory) {
+	defaultFactory = factory
+}
+
+// NewClient creates a new Humanitec API client
+func (f *DefaultClientFactory) NewClient(token, org string) Client {
+	return &humanitecClient{
+		apiToken: token,
+		baseURL:  "https://api.humanitec.io",
+		org:      org,
+		client: &http.Client{
+			Timeout: 30 * time.Second,
+		},
+	}
+}
+
+// NewClient creates a new Humanitec API client (for backward compatibility)
+func NewClient(token, org string) Client {
+	return defaultFactory.NewClient(token, org)
 }
 
 // humanitecClient represents a Humanitec API client
@@ -36,18 +70,6 @@ type humanitecClient struct {
 	baseURL  string
 	org      string
 	client   *http.Client
-}
-
-// NewClient creates a new Humanitec API client
-func NewClient(apiToken, org string) Client {
-	return &humanitecClient{
-		apiToken: apiToken,
-		baseURL:  "https://api.humanitec.io",
-		org:      org,
-		client: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-	}
 }
 
 // Validate checks if the client is properly configured
@@ -129,13 +151,10 @@ func (c *humanitecClient) GetApp(name string) (*App, error) {
 }
 
 // CreateApp creates a new application in the organization
-func (c *humanitecClient) CreateApp(name string, skipEnvCreation bool) (*App, error) {
+func (c *humanitecClient) CreateApp(id string, name string, skipEnvCreation bool) (*App, error) {
 	if err := c.Validate(); err != nil {
 		return nil, err
 	}
-
-	// Generate a URL-friendly ID from the name
-	id := strings.ToLower(strings.ReplaceAll(name, " ", "-"))
 
 	payload := struct {
 		ID                    string `json:"id"`
